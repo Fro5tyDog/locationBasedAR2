@@ -156,6 +156,7 @@ function renderModels(){
 
                     model.addEventListener('model-loaded', () => {
                         model.classList.add(`${name}`);
+                        console.log('model loaded');
                     })
                 })
             }
@@ -254,4 +255,8 @@ async function initializeMyApp(){
     // 3.
     const startUpScreen = await createStartScreen();
 
+    const canvas = document.querySelector('canvas');
+if (canvas) {
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+}
 }
