@@ -185,10 +185,10 @@ function createStartScreen(){
              document.getElementById('start-button').addEventListener('click', startUp);
 
             // Check for all a-entity elements and set their visibility to false
-            const entities = document.querySelectorAll('a-entity');
-            entities.forEach((entity) => {
-                entity.setAttribute('visible', 'true');
-            });
+            // const entities = document.querySelectorAll('a-entity');
+            // entities.forEach((entity) => {
+            //     entity.setAttribute('visible', 'true');
+            // });
 
             resolve(true);
         } 
@@ -205,10 +205,10 @@ async function startUp(){
     document.getElementById('top-left-circle').classList.remove('greyed-out');
 
     // Check for all a-entity elements and set their visibility to true
-    const entities = document.querySelectorAll('a-entity');
-    entities.forEach((entity) => {
-        entity.setAttribute('visible', 'true');
-    });
+    // const entities = document.querySelectorAll('a-entity');
+    // entities.forEach((entity) => {
+    //     entity.setAttribute('visible', 'true');
+    // });
 
     const locationDisplay = document.getElementById('location-display');
     locationDisplay.innerHTML = `start`;   
