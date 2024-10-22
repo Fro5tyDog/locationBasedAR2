@@ -22,7 +22,6 @@
         </div> 
         <div class="circle circle-center">
             <div class="arrow"></div><br>
-            <!-- <img src="./assets/ui_Images/arrow.png" alt="Arrow"> Center Circle Image -->
             <div class="text-container">
                 <div id="location-display"></div> <!-- Text Below the Middle Circle -->
             </div>
@@ -45,7 +44,7 @@
         embedded
         arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: false;'
         renderer="precision: mediump; antialias: false; alpha: true; logarithmicDepthBuffer: true; colorManagement: true;">
-        <a-camera gps-camera rotation-reader wasd-controls-enabled="true"></a-camera>
+        <a-camera gps-camera rotation-reader wasd-controls-enabled="false"></a-camera>
     </a-scene>  
 </body>
 </html>
