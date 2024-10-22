@@ -187,7 +187,7 @@ function createStartScreen(){
             // Check for all a-entity elements and set their visibility to false
             const entities = document.querySelectorAll('a-entity');
             entities.forEach((entity) => {
-                entity.setAttribute('visible', 'false');
+                entity.setAttribute('visible', 'true');
             });
 
             resolve(true);
