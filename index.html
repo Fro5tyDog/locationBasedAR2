@@ -37,12 +37,11 @@
         <img src="./assets/ui_Images/mapIcon.png">
         <button id="start-button">Tap to Start</button>
     </div>
-
-    
+   
     <a-scene
         vr-mode-ui="enabled: false"
         embedded
-        arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: false;'
+        arjs='sourceType: webcam; debugUIEnabled: false;'
         renderer="precision: mediump; antialias: false; alpha: true; logarithmicDepthBuffer: true; colorManagement: true;">
         <a-camera gps-camera rotation-reader wasd-controls-enabled="false"></a-camera>
     </a-scene>  
