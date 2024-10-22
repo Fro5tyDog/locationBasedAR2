@@ -1,11 +1,11 @@
 /* Styling for the circles */
-
+/* 
 body {
     overflow: hidden !important;
     width: 100% !important;
     height: 100% !important;
     margin: 0 !important;
-}
+} */
 .circle-container {
     position: fixed;
     top: 20px;
