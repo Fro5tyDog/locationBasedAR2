@@ -1,5 +1,11 @@
 /* Styling for the circles */
 
+body {
+    overflow: hidden !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+}
 .circle-container {
     position: fixed;
     top: 20px;
@@ -10,7 +16,6 @@
     box-sizing: border-box;
     z-index: 10; /* Make sure this is above the A-Frame scene */
     pointer-events: auto; /* Enable pointer events */
-    margin-left: 300px
 }
 
 .circle {
