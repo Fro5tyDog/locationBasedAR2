@@ -4,14 +4,7 @@ let animationFrameId; // Store the animation frame ID globally
 
 // wait for dom to finish loading before loading models and updating UI
 document.addEventListener('DOMContentLoaded', function () {
-    // const scene = document.querySelector('a-scene');
-
-    // scene.addEventListener('loaded', function () {
-    //     console.log('A-Frame scene fully initialized');
         initializeMyApp();
-    // });
-
-
 });
 
 // Step 1 --------------------------------
@@ -255,8 +248,4 @@ async function initializeMyApp(){
     // 3.
     const startUpScreen = await createStartScreen();
 
-    const canvas = document.querySelector('canvas');
-if (canvas) {
-    const context = canvas.getContext('2d', { willReadFrequently: true });
-}
 }
