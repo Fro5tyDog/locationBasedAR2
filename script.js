@@ -200,8 +200,7 @@ async function startUp(){
     });
 
     // Identify the closet target based on distancemsg. 
-    // const playerPosition = await getPlayerPosition();
-    const closestModel = await getClosestModel();
+    updateClosestModelLoop();
 
     // Update the UI with the player's position and the closest model.
     // const playerLocation = document.getElementById('player-location');
@@ -222,31 +221,139 @@ async function startUp(){
     console.log("START!");
 }
 
-function getClosestModel(){
+function getPlayerPosition(){
     return new Promise((resolve, reject) => {
         try{
-             // variable to store closest model to player
-                let closestModel = null;
+             if(navigator.geolocation){
 
-                const entities = document.querySelectorAll('a-entity');
-                entities.forEach((entity) => {
-                    const distanceToTarget = entity.getAttribute('distance');
-                    if(closestModel === null){
-                        closestModel = distanceToTarget;
-                    }
-                    else if(distanceToTarget < closestModel){
-                        closestModel = distanceToTarget;
-                    }
-                });
+                const options = {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                  };
+                  
+                  function success(pos) {
+                    const position = pos.coords;
+                  
+                    console.log("Your current position is:");
+                    console.log(`Latitude : ${position.latitude}`);
+                    console.log(`Longitude: ${position.longitude}`);
+                    console.log(`More or less ${position.accuracy} meters.`);
+
+                    const playerPos = {
+                        lat: position.latitude, 
+                        lng: position.longitude
+                    };
+                    resolve(playerPos);
+                  }
+                  
+                  function error(err) {
+                    console.warn(`ERROR(${err.code}): ${err.message}`);
+                    reject(err);
+                  }
+
+                  navigator.geolocation.getCurrentPosition(success, error, options);
+                  
+             } else {
+                console.error("Geolocation is not supported by this browser.");
+                reject(false);
+             }
+        } 
+        catch(error){
+            reject(error);
+        }   
+    })
+}
+
+function getClosestModel(playerPosition){
+    return new Promise((resolve, reject) => {
+        try{
+            // fetch json to find models positions.
+            fetch('./model_positions.json')
+            .then(response => response.json())
+            .then(data => {
+                 console.log('JSON loaded', data);
+                 getModelPosition(data);
+ 
+                 // resolve after models are created
+                 resolve(true);
+             })
+            .catch(error => {
+                 console.error('Error loading the JSON data:', error);
+             });
+   
+             // Function to create each model from the json.
+             function getModelPosition(models){
+                //variable to establish closest model
+                let closestDistance = 0;
+                let closestModel;
+                const closestModelDetails = {
+                    closestDistance: closestDistance,
+                    closestModel: closestModel
+                };
+                 models.forEach(modelSeparated => {
+                    const model_latitude = modelSeparated.location.lat;
+                    const model_longitude = modelSeparated.location.lng;
+                    const player_latitude = playerPosition.lat;
+                    const player_longitude = playerPosition.lng;
+
+                    const distanceBetweenPlayerAndModel = Number(calculateDistance(player_latitude, player_longitude, model_latitude, model_longitude));
+                    console.log(distanceBetweenPlayerAndModel);
+                    if (closestDistance === 0 || distanceBetweenPlayerAndModel < closestDistance) {
+                        closestDistance = distanceBetweenPlayerAndModel;
+                        closestModel = modelSeparated.name;
+                    }                 
+                })
+                closestModelDetails.closestDistance = closestDistance;
+                closestModelDetails.closestModel = closestModel;
+                resolve(closestModelDetails);
+            }
                 
-                updateLocationDisplayUI(closestModel);
-                resolve(true);
         } 
         catch(error){
             reject(error);
         }   
     })
 
+}
+
+async function updateClosestModelLoop() {
+    try {
+        const playerPosition = await getPlayerPosition();
+        const closestModel = await getClosestModel(playerPosition);
+        
+        // Update the UI with the closest model information
+        // Math.floor(closestModel.closestDistance)
+        updateLocationDisplayUI(closestModel.closestDistance, closestModel.closestModel);
+        
+        // Call recursively on the next frame
+        requestAnimationFrame(updateClosestModelLoop);
+    } catch (error) {
+        console.error("Error updating closest model:", error);
+    }
+}
+    
+
+function calculateDistance(lat1,lon1,lat2,lon2){
+    try{
+        var R = 6371; // Radius of the earth in km
+        var dLat = deg2rad(lat2-lat1);  // deg2rad below
+        var dLon = deg2rad(lon2-lon1); 
+        var a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+            Math.sin(dLon/2) * Math.sin(dLon/2)
+            ; 
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+        var d = R * c; // Distance in km
+        return(d * 1000); // send distance in meters
+        
+        function deg2rad(deg) {
+        return deg * (Math.PI/180)
+        }
+    }
+    catch(error){
+        console.error(error);
+    }  
 }
 
 // starts updating the UI.
@@ -267,14 +374,10 @@ function updateArrowUI() {
     requestAnimationFrame(updateArrowUI);
 }
 
-function updateLocationDisplayUI(distanceToTarget) {
-    
-    //update location display
+// UI update function
+function updateLocationDisplayUI(distanceToTarget, target) {
     const locationDisplay = document.getElementById('location-display');
-    locationDisplay.innerHTML = `${distanceToTarget}`;   
-
-    // Call the function recursively on each animation frame
-    requestAnimationFrame(updateLocationDisplayUI);
+    locationDisplay.innerHTML = `Distance to closest model, ${target}: ${distanceToTarget.toFixed(2)} meters`;
 }
 
 async function initializeMyApp(){
