@@ -305,9 +305,13 @@ function adjustModelProperties(playerPosition){
                     const player_latitude = playerPosition.lat;
                     const player_longitude = playerPosition.lng;
 
+                    // Get model entity in the scene
+                    const modelEntity = document.querySelector(`.${modelSeparated.name}`);
+                    modelEntity.object3D.visible = false;
+
                     const distanceBetweenPlayerAndModel = Number(calculateDistance(player_latitude, player_longitude, model_latitude, model_longitude));
                     
-                    console.log(distanceBetweenPlayerAndModel);
+                    // console.log(distanceBetweenPlayerAndModel);
                     if (closestDistance === 0 || distanceBetweenPlayerAndModel < closestDistance) {
                         closestDistance = distanceBetweenPlayerAndModel;
                         closestModel = modelSeparated.name;
@@ -354,7 +358,7 @@ async function updateClosestModelLoop() {
         
         // Update the UI with the closest model information
         // Math.floor(closestModel.closestDistance)
-        updateLocationDisplayUI(closestModel.closestDistance, closestModel.closestModel, closestModel.tooClose, closestModel.tooFar, closestModel.minDistance, closestModel.maxDistance);
+        const updateUI_Models = await updateLocationDisplayUI(closestModel.closestDistance, closestModel.closestModel, closestModel.tooClose, closestModel.tooFar, closestModel.minDistance, closestModel.maxDistance);
 
         //Update visibility of the model based on the min max distance. 
         
@@ -365,7 +369,7 @@ async function updateClosestModelLoop() {
     }
 }
 
-function cancelClosesModelLoop(){
+function cancelClosestModelLoop(){
     cancelAnimationFrame(updateClosestModelLoopID);
 }
     
@@ -413,29 +417,46 @@ function updateArrowUI() {
 
 // UI update function
 function updateLocationDisplayUI(distanceToTarget, target, tooClose, tooFar, minDistance, maxDistance) {
-    const locationDisplay = document.getElementById('location-display');
 
-    // Get model entity in the scene
-    const modelEntity = document.querySelector(`.${target}`);
+    return new Promise((resolve, reject) => {
+        try{
+            const locationDisplay = document.getElementById('location-display');
 
-    // Adjust visibility based on distance
-    // This keeps all other models invisible because we disabled them from the start and only enable them here.
-    if (distanceToTarget >= minDistance && distanceToTarget <= maxDistance) {
-        modelEntity.setAttribute('visible', 'true');
-    } else {
-        modelEntity.setAttribute('visible', 'false');
-    }
+            // Get model entity in the scene
+            const modelEntity = document.querySelector(`.${target}`);
+            // console.log(modelEntity);
 
-    // change text depending on distance between player and model
-    if(tooClose == false && tooFar == false){
-        locationDisplay.innerHTML = `Distance to closest model, ${target}: \n${distanceToTarget.toFixed(2)} meters`;
-    } else if (tooClose == true && tooFar == false) {
-        locationDisplay.innerHTML = `Too close to ${target}!`;
-    } else if (tooClose == false && tooFar == true) {
-        locationDisplay.innerHTML = `Too far from ${target}!: \n${distanceToTarget.toFixed(2)} meters`;
-    } else{
-        locationDisplay.innerHTML = "No models found!";
-    }
+            // Adjust visibility based on distance
+            // This keeps all other models invisible because we disabled them from the start and only enable them here.
+            if (distanceToTarget >= minDistance && distanceToTarget <= maxDistance) {
+                modelEntity.object3D.visible = true;
+                // console.log('model is visible');
+                // console.log(modelEntity.getAttribute('visible'));
+            } else {
+                modelEntity.setAttribute('visible', 'false');
+                modelEntity.object3D.visible = false;
+                // console.log('model is not visible');
+                // console.log(modelEntity.getAttribute('visible'));
+            }
+
+            // change text depending on distance between player and model
+            if(tooClose == false && tooFar == false){
+                locationDisplay.innerHTML = `Distance to closest model, ${target}: \n${distanceToTarget.toFixed(2)} meters`;
+            } else if (tooClose == true && tooFar == false) {
+                locationDisplay.innerHTML = `Too close to ${target}!`;
+            } else if (tooClose == false && tooFar == true) {
+                locationDisplay.innerHTML = `Too far from ${target}!: \n${distanceToTarget.toFixed(2)} meters`;
+            } else{
+                locationDisplay.innerHTML = "No models found!";
+            }
+            
+            resolve(true);
+        } 
+        catch(error){
+            reject(error);
+        }
+    })
+    
 }
 
 async function initializeMyApp(){
