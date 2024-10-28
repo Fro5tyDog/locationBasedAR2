@@ -378,7 +378,7 @@ async function updateClosestModelLoop() {
         const updateUI_Models = await updateLocationDisplayUI(closestModel.closestDistance, closestModel.closestModel, closestModel.tooClose, closestModel.tooFar, closestModel.minDistance, closestModel.maxDistance);
 
         //Update arrow based on bearing 
-        const updateArrowUI_variable = await updateArrowUI(playerPosition, closestModel.modelLat, closestModel.modelLng)
+        updateArrowUI(playerPosition, closestModel.modelLat, closestModel.modelLng);
 
         // Call recursively on the next frame
         updateClosestModelLoopID = requestAnimationFrame(updateClosestModelLoop);
@@ -425,39 +425,17 @@ function calculateDistance(lat1,lon1,lat2,lon2){
 
 // functions to calcuate angle the arrow should rotate.
 function calculateBearing(playerPos, modelPos) {
-    try{
-        // Convert latitude and longitude to radians
-        const lat1 = playerPos.lat * (Math.PI / 180);
-        const lon1 = playerPos.lng * (Math.PI / 180);
-        const lat2 = modelPos.lat * (Math.PI / 180);
-        const lon2 = modelPos.lng * (Math.PI / 180);
-    
-        // Calculate bearing using trigonometric formula
-        const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
-        const x =
-            Math.cos(lat1) * Math.sin(lat2) -
-            Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
-        let bearing = Math.atan2(y, x) * (180 / Math.PI);
-    
-        // Normalize the bearing to be between 0 and 360 degrees
-        bearing = (bearing + 360) % 360;
-        return(bearing.toFixed(0)); // Return as a whole number
-        // }
-        // const lat1 = toRadians(playerPos.lat);
-        // const lat2 = toRadians(modelPos.lat);
-        // const deltaLon = toRadians(modelPos.lng - playerPos.lng);
+    const lat1 = toRadians(playerPos.lat);
+    const lat2 = toRadians(modelPos.lat);
+    const deltaLon = toRadians(modelPos.lng - playerPos.lng);
 
-        // const y = Math.sin(deltaLon) * Math.cos(lat2);
-        // const x = Math.cos(lat1) * Math.sin(lat2) - 
-        //         Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
-        // const bearing = Math.atan2(y, x);
-        
-        // // Convert from radians to degrees and normalize between 0-360
-        // return (toDegrees(bearing) + 360) % 360;
-    }
-    catch(error){
-        console.error(error);
-    }
+    const y = Math.sin(deltaLon) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) - 
+              Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
+    const bearing = Math.atan2(y, x);
+    
+    // Convert from radians to degrees and normalize between 0-360
+    return (toDegrees(bearing) + 360) % 360;
 }
 
 function toRadians(degrees) {
@@ -469,57 +447,57 @@ function toDegrees(radians) {
 }
 
 
+
 // starts updating the UI.
 // let rotationAngle = 0; // Keep track of the current rotation angle
 
-// function updateArrowUI() {
-//     // Update arrow rotation
-//     const arrow = document.querySelector(".arrow");
-//     rotationAngle += 1; // Increment the rotation angle
-//     arrow.style.transform = `translate(-50%, -50%) rotate(${rotationAngle}deg)`;
-
-//     // Keep the rotation between 0 and 360 degrees
-//     if (rotationAngle >= 360) {
-//         rotationAngle = 0; // Reset to 0 after a full rotation
-//     }
-
-//     // Call the function recursively on each animation frame
-//     requestAnimationFrame(updateArrowUI);
-// }
-
 function updateArrowUI(playerPosition, modelLat, modelLng) {
-    return new Promise((resolve, reject) => {
-        try {  
-            // Log the positions to verify
-            console.log("Player Position:", playerPosition);
-            console.log("Model Position:", { lat: modelLat, lng: modelLng });
+    // Update arrow rotation
 
-            const modelPos = {
-                lat: modelLat, 
-                lng: modelLng
-            };
+    const modelPos = {
+        lat: modelLat,  // adjust if necessary based on your data structure
+        lng: modelLng
+    };
+    const rotationAngle = calculateBearing(playerPosition, modelPos);
+    const arrow = document.querySelector(".arrow");
+    // rotationAngle += 1; // Increment the rotation angle
+    arrow.style.transform = `translate(-50%, -50%) rotate(${rotationAngle}deg)`;
 
-            // Ensure lat and lng are defined before calculating bearing
-            if (playerPosition && playerPosition.lat != null && playerPosition.lng != null &&
-                modelPos.lat != null && modelPos.lng != null) {
+    // Keep the rotation between 0 and 360 degrees
+    // if (rotationAngle >= 360) {
+    //     rotationAngle = 0; // Reset to 0 after a full rotation
+    // }
 
-                // Calculate the bearing angle to the model
-                const rotationAngle = calculateBearing(playerPosition, modelPos);
-
-                // Apply rotation to the arrow
-                const arrow = document.querySelector(".arrow");
-                arrow.style.transform = `translate(-50%, -50%) rotate(${rotationAngle}deg)`;
-                resolve(true);
-            } else {
-                console.error("Invalid position data for bearing calculation.");
-            }
-         
-        } catch (error) {
-            console.error("Error updating arrow direction:", error);
-            reject(error);
-        }
-    })
+    // Call the function recursively on each animation frame
+    requestAnimationFrame(updateArrowUI);
 }
+
+// async function updateArrowUI(playerPosition, modelLat, modelLng) {
+//     try{  
+//         const playerPosition = await getPlayerPosition();
+//         const closestModelDetails = await adjustModelProperties(playerPosition);
+        
+//         // Assume closestModelDetails includes lat and lng of the closest model
+//         const modelPos = {
+//             lat: closestModelDetails.modelLat,  // adjust if necessary based on your data structure
+//             lng: closestModelDetails.modelLng
+//         };
+
+//         // console.log(playerPosition);
+
+//         // Calculate the bearing angle to the model
+        
+
+//         // Apply rotation to the arrow
+//         const arrow = document.querySelector(".arrow");
+//         arrow.style.transform = `translate(-50%, -50%) rotate(${rotationAngle}deg)`;
+
+//         // Call the function recursively on each animation frame
+//         requestAnimationFrame(updateArrowUI);
+//     } catch (error) {
+//         console.error("Error updating arrow direction:", error);
+//     }
+// }
 
 
 // UI update function
