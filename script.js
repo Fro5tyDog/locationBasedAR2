@@ -193,22 +193,24 @@ async function startUp(){
     document.getElementById('top-left-circle').classList.remove('greyed-out');
 
     // Check for all a-entity elements and set their visibility to true
+    // Update the innnerHTML to display cloest model to the player.
     const entities = document.querySelectorAll('a-entity');
     entities.forEach((entity) => {
         entity.setAttribute('visible', 'true');
+        const distanceToTarget = entity.getAttribute('distance');
+        updateLocationDisplayUI(distanceToTarget);
     });
 
-    // fetch player's position and the cloest target. 
+    // Identify the closet target based on distancemsg. 
     // const playerPosition = await getPlayerPosition();
     // const closestModel = await getClosestModel(playerPosition);
 
     // Update the UI with the player's position and the closest model.
     // const playerLocation = document.getElementById('player-location');
     // playerLocation.innerHTML = `Player's location: (${playerPosition.latitude}, ${playerPosition.longitude})`;
-    updateUI();
+    updateArrowUI();
 
-    const locationDisplay = document.getElementById('location-display');
-    locationDisplay.innerHTML = `start`;   
+    
 
     // Hide the start screen
     document.querySelector('.start').classList.add('hidden');
@@ -225,7 +227,7 @@ async function startUp(){
 // starts updating the UI.
 let rotationAngle = 0; // Keep track of the current rotation angle
 
-function updateUI() {
+function updateArrowUI() {
     // Update arrow rotation
     const arrow = document.querySelector(".arrow");
     rotationAngle += 1; // Increment the rotation angle
@@ -237,7 +239,17 @@ function updateUI() {
     }
 
     // Call the function recursively on each animation frame
-    requestAnimationFrame(updateUI);
+    requestAnimationFrame(updateArrowUI);
+}
+
+function updateLocationDisplayUI(distanceToTarget) {
+    
+    //update location display
+    const locationDisplay = document.getElementById('location-display');
+    locationDisplay.innerHTML = `${distanceToTarget}`;   
+
+    // Call the function recursively on each animation frame
+    requestAnimationFrame(updateLocationDisplayUI);
 }
 
 async function initializeMyApp(){
