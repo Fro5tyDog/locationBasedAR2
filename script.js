@@ -197,13 +197,11 @@ async function startUp(){
     const entities = document.querySelectorAll('a-entity');
     entities.forEach((entity) => {
         entity.setAttribute('visible', 'true');
-        const distanceToTarget = entity.getAttribute('distance');
-        updateLocationDisplayUI(distanceToTarget);
     });
 
     // Identify the closet target based on distancemsg. 
     // const playerPosition = await getPlayerPosition();
-    // const closestModel = await getClosestModel(playerPosition);
+    const closestModel = await getClosestModel();
 
     // Update the UI with the player's position and the closest model.
     // const playerLocation = document.getElementById('player-location');
@@ -222,6 +220,33 @@ async function startUp(){
     // await updateArrow();
 
     console.log("START!");
+}
+
+function getClosestModel(){
+    return new Promise((resolve, reject) => {
+        try{
+             // variable to store closest model to player
+                let closestModel = null;
+
+                const entities = document.querySelectorAll('a-entity');
+                entities.forEach((entity) => {
+                    const distanceToTarget = entity.getAttribute('distancemsg');
+                    if(closesModel === null){
+                        closestModel = distanceToTarget;
+                    }
+                    else if(distanceToTarget < closestModel){
+                        closestModel = distanceToTarget;
+                    }
+                });
+                
+                updateLocationDisplayUI(closestModel);
+                resolve(true);
+        } 
+        catch(error){
+            reject(error);
+        }   
+    })
+
 }
 
 // starts updating the UI.
