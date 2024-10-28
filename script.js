@@ -426,17 +426,34 @@ function calculateDistance(lat1,lon1,lat2,lon2){
 // functions to calcuate angle the arrow should rotate.
 function calculateBearing(playerPos, modelPos) {
     try{
-        const lat1 = toRadians(playerPos.lat);
-        const lat2 = toRadians(modelPos.lat);
-        const deltaLon = toRadians(modelPos.lng - playerPos.lng);
+        // Convert latitude and longitude to radians
+        const lat1 = playerPos.latitude * (Math.PI / 180);
+        const lon1 = playerPos.longitude * (Math.PI / 180);
+        const lat2 = modelPos.latitude * (Math.PI / 180);
+        const lon2 = modelPos.longitude * (Math.PI / 180);
+    
+        // Calculate bearing using trigonometric formula
+        const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+        const x =
+            Math.cos(lat1) * Math.sin(lat2) -
+            Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+        let bearing = Math.atan2(y, x) * (180 / Math.PI);
+    
+        // Normalize the bearing to be between 0 and 360 degrees
+        bearing = (bearing + 360) % 360;
+        return(bearing.toFixed(0)); // Return as a whole number
+        // }
+        // const lat1 = toRadians(playerPos.lat);
+        // const lat2 = toRadians(modelPos.lat);
+        // const deltaLon = toRadians(modelPos.lng - playerPos.lng);
 
-        const y = Math.sin(deltaLon) * Math.cos(lat2);
-        const x = Math.cos(lat1) * Math.sin(lat2) - 
-                Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
-        const bearing = Math.atan2(y, x);
+        // const y = Math.sin(deltaLon) * Math.cos(lat2);
+        // const x = Math.cos(lat1) * Math.sin(lat2) - 
+        //         Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
+        // const bearing = Math.atan2(y, x);
         
-        // Convert from radians to degrees and normalize between 0-360
-        return (toDegrees(bearing) + 360) % 360;
+        // // Convert from radians to degrees and normalize between 0-360
+        // return (toDegrees(bearing) + 360) % 360;
     }
     catch(error){
         console.error(error);
