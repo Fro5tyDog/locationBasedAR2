@@ -97,6 +97,11 @@ function thumbnailClick(event){
 
 // What happens when you select a new model
 function selectNewModel(name){
+
+    //1. cancel the closest Model loop 
+    //2. call for the player's position
+    //3. call for adjustModelProperties
+    //4. Call for UI updates 
     const locationDisplay = document.getElementById('location-display');
     locationDisplay.innerHTML = `${name}`;   
 }
@@ -206,7 +211,7 @@ async function startUp(){
     // Update the UI with the player's position and the closest model.
     // const playerLocation = document.getElementById('player-location');
     // playerLocation.innerHTML = `Player's location: (${playerPosition.latitude}, ${playerPosition.longitude})`;
-    updateArrowUI();
+    // updateArrowUI();
 
     
 
@@ -291,17 +296,21 @@ function adjustModelProperties(playerPosition){
                 let tooFar = false;
                 let minDistance;
                 let maxDistance;
+                let model_latitude;
+                let model_longitude;
                 const closestModelDetails = {
                     closestDistance: closestDistance,
                     closestModel: closestModel,
                     tooClose: tooClose,
                     tooFar: tooFar,
                     minDistance: minDistance,
-                    maxDistance: maxDistance
+                    maxDistance: maxDistance,
+                    modelLat: model_latitude,
+                    modelLng: model_longitude
                 };
                  models.forEach(modelSeparated => {
-                    const model_latitude = modelSeparated.location.lat;
-                    const model_longitude = modelSeparated.location.lng;
+                    model_latitude_current = modelSeparated.location.lat;
+                    model_longitude_current = modelSeparated.location.lng;
                     const player_latitude = playerPosition.lat;
                     const player_longitude = playerPosition.lng;
 
@@ -309,7 +318,7 @@ function adjustModelProperties(playerPosition){
                     const modelEntity = document.querySelector(`.${modelSeparated.name}`);
                     modelEntity.object3D.visible = false;
 
-                    const distanceBetweenPlayerAndModel = Number(calculateDistance(player_latitude, player_longitude, model_latitude, model_longitude));
+                    const distanceBetweenPlayerAndModel = Number(calculateDistance(player_latitude, player_longitude, model_latitude_current, model_longitude_current));
                     
                     // console.log(distanceBetweenPlayerAndModel);
                     if (closestDistance === 0 || distanceBetweenPlayerAndModel < closestDistance) {
@@ -318,6 +327,10 @@ function adjustModelProperties(playerPosition){
                         // Visibility range from JSON
                         minDistance = modelSeparated.visibilityRange.min;
                         maxDistance = modelSeparated.visibilityRange.max;
+
+                        //set the lat and lng values
+                        model_latitude = model_latitude_current;
+                        model_longitude = model_longitude_current;
 
                         // Adjust visibility based on distance
                         if (distanceBetweenPlayerAndModel >= minDistance && distanceBetweenPlayerAndModel <= maxDistance) {
@@ -338,6 +351,8 @@ function adjustModelProperties(playerPosition){
                 closestModelDetails.tooFar = tooFar;
                 closestModelDetails.minDistance = minDistance;
                 closestModelDetails.maxDistance = maxDistance;
+                closestModelDetails.modelLat = model_latitude;
+                closestModelDetails.modelLng = model_longitude;
                 resolve(closestModelDetails);
             }
                 
@@ -355,13 +370,16 @@ async function updateClosestModelLoop() {
     try {
         const playerPosition = await getPlayerPosition();
         const closestModel = await adjustModelProperties(playerPosition);
+
+        console.log(closestModel);
         
         // Update the UI with the closest model information
         // Math.floor(closestModel.closestDistance)
         const updateUI_Models = await updateLocationDisplayUI(closestModel.closestDistance, closestModel.closestModel, closestModel.tooClose, closestModel.tooFar, closestModel.minDistance, closestModel.maxDistance);
 
-        //Update visibility of the model based on the min max distance. 
-        
+        //Update arrow based on bearing 
+        const updateArrowUI_variable = await updateArrowUI(playerPosition, closestModel.modelLat, closestModel.modelLng)
+
         // Call recursively on the next frame
         updateClosestModelLoopID = requestAnimationFrame(updateClosestModelLoop);
     } catch (error) {
@@ -370,7 +388,15 @@ async function updateClosestModelLoop() {
 }
 
 function cancelClosestModelLoop(){
-    cancelAnimationFrame(updateClosestModelLoopID);
+    return new Promise((resolve, reject) => {
+        try{
+            cancelAnimationFrame(updateClosestModelLoopID);
+            resolve(true);
+        }
+        catch(error){
+            reject(error);
+        }
+    })
 }
     
 
@@ -397,23 +423,86 @@ function calculateDistance(lat1,lon1,lat2,lon2){
     }  
 }
 
-// starts updating the UI.
-let rotationAngle = 0; // Keep track of the current rotation angle
+// functions to calcuate angle the arrow should rotate.
+function calculateBearing(playerPos, modelPos) {
+    try{
+        const lat1 = toRadians(playerPos.lat);
+        const lat2 = toRadians(modelPos.lat);
+        const deltaLon = toRadians(modelPos.lng - playerPos.lng);
 
-function updateArrowUI() {
-    // Update arrow rotation
-    const arrow = document.querySelector(".arrow");
-    rotationAngle += 1; // Increment the rotation angle
-    arrow.style.transform = `translate(-50%, -50%) rotate(${rotationAngle}deg)`;
-
-    // Keep the rotation between 0 and 360 degrees
-    if (rotationAngle >= 360) {
-        rotationAngle = 0; // Reset to 0 after a full rotation
+        const y = Math.sin(deltaLon) * Math.cos(lat2);
+        const x = Math.cos(lat1) * Math.sin(lat2) - 
+                Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
+        const bearing = Math.atan2(y, x);
+        
+        // Convert from radians to degrees and normalize between 0-360
+        return (toDegrees(bearing) + 360) % 360;
     }
-
-    // Call the function recursively on each animation frame
-    requestAnimationFrame(updateArrowUI);
+    catch(error){
+        console.error(error);
+    }
 }
+
+function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
+function toDegrees(radians) {
+    return radians * (180 / Math.PI);
+}
+
+
+// starts updating the UI.
+// let rotationAngle = 0; // Keep track of the current rotation angle
+
+// function updateArrowUI() {
+//     // Update arrow rotation
+//     const arrow = document.querySelector(".arrow");
+//     rotationAngle += 1; // Increment the rotation angle
+//     arrow.style.transform = `translate(-50%, -50%) rotate(${rotationAngle}deg)`;
+
+//     // Keep the rotation between 0 and 360 degrees
+//     if (rotationAngle >= 360) {
+//         rotationAngle = 0; // Reset to 0 after a full rotation
+//     }
+
+//     // Call the function recursively on each animation frame
+//     requestAnimationFrame(updateArrowUI);
+// }
+
+function updateArrowUI(playerPosition, modelLat, modelLng) {
+    return new Promise((resolve, reject) => {
+        try {  
+            // Log the positions to verify
+            console.log("Player Position:", playerPosition);
+            console.log("Model Position:", { lat: modelLat, lng: modelLng });
+
+            const modelPos = {
+                lat: modelLat, 
+                lng: modelLng
+            };
+
+            // Ensure lat and lng are defined before calculating bearing
+            if (playerPosition && playerPosition.lat != null && playerPosition.lng != null &&
+                modelPos.lat != null && modelPos.lng != null) {
+
+                // Calculate the bearing angle to the model
+                const rotationAngle = calculateBearing(playerPosition, modelPos);
+
+                // Apply rotation to the arrow
+                const arrow = document.querySelector(".arrow");
+                arrow.style.transform = `translate(-50%, -50%) rotate(${rotationAngle}deg)`;
+                resolve(true);
+            } else {
+                console.error("Invalid position data for bearing calculation.");
+            }
+         
+        } catch (error) {
+            console.error("Error updating arrow direction:", error);
+        }
+    })
+}
+
 
 // UI update function
 function updateLocationDisplayUI(distanceToTarget, target, tooClose, tooFar, minDistance, maxDistance) {
@@ -442,15 +531,17 @@ function updateLocationDisplayUI(distanceToTarget, target, tooClose, tooFar, min
             // change text depending on distance between player and model
             if(tooClose == false && tooFar == false){
                 locationDisplay.innerHTML = `Distance to closest model, ${target}: \n${distanceToTarget.toFixed(2)} meters`;
+                resolve(true);
             } else if (tooClose == true && tooFar == false) {
                 locationDisplay.innerHTML = `Too close to ${target}!`;
+                resolve(true);
             } else if (tooClose == false && tooFar == true) {
                 locationDisplay.innerHTML = `Too far from ${target}!: \n${distanceToTarget.toFixed(2)} meters`;
+                resolve(true);
             } else{
                 locationDisplay.innerHTML = "No models found!";
+                reject(false);
             }
-            
-            resolve(true);
         } 
         catch(error){
             reject(error);
