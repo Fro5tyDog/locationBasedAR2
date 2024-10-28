@@ -194,10 +194,11 @@ async function startUp(){
 
     // Check for all a-entity elements and set their visibility to true
     // Update the innnerHTML to display cloest model to the player.
-    const entities = document.querySelectorAll('a-entity');
-    entities.forEach((entity) => {
-        entity.setAttribute('visible', 'true');
-    });
+    // handle this in updateClosestModel
+    // const entities = document.querySelectorAll('a-entity');
+    // entities.forEach((entity) => {
+    //     entity.setAttribute('visible', 'true');
+    // });
 
     // Identify the closet target based on distancemsg. 
     updateClosestModelLoop();
@@ -288,11 +289,15 @@ function adjustModelProperties(playerPosition){
                 let closestModel;
                 let tooClose = false;
                 let tooFar = false;
+                let minDistance;
+                let maxDistance;
                 const closestModelDetails = {
                     closestDistance: closestDistance,
                     closestModel: closestModel,
                     tooClose: tooClose,
-                    tooFar: tooFar
+                    tooFar: tooFar,
+                    minDistance: minDistance,
+                    maxDistance: maxDistance
                 };
                  models.forEach(modelSeparated => {
                     const model_latitude = modelSeparated.location.lat;
@@ -307,19 +312,14 @@ function adjustModelProperties(playerPosition){
                         closestDistance = distanceBetweenPlayerAndModel;
                         closestModel = modelSeparated.name;
                         // Visibility range from JSON
-                        const minDistance = modelSeparated.visibilityRange.min;
-                        const maxDistance = modelSeparated.visibilityRange.max;
-                        
-                        // Get model entity in the scene
-                        const modelEntity = document.querySelector(`.${modelSeparated.name}`);
+                        minDistance = modelSeparated.visibilityRange.min;
+                        maxDistance = modelSeparated.visibilityRange.max;
 
                         // Adjust visibility based on distance
                         if (distanceBetweenPlayerAndModel >= minDistance && distanceBetweenPlayerAndModel <= maxDistance) {
-                            modelEntity.setAttribute('visible', 'true');
                             tooClose = false;
                             tooFar = false;
                         } else {
-                            modelEntity.setAttribute('visible', 'false');
                             if(distanceBetweenPlayerAndModel < minDistance) {
                                 tooClose = true;
                             } else{
@@ -332,6 +332,8 @@ function adjustModelProperties(playerPosition){
                 closestModelDetails.closestModel = closestModel;
                 closestModelDetails.tooClose = tooClose;
                 closestModelDetails.tooFar = tooFar;
+                closestModelDetails.minDistance = minDistance;
+                closestModelDetails.maxDistance = maxDistance;
                 resolve(closestModelDetails);
             }
                 
@@ -352,7 +354,7 @@ async function updateClosestModelLoop() {
         
         // Update the UI with the closest model information
         // Math.floor(closestModel.closestDistance)
-        updateLocationDisplayUI(closestModel.closestDistance, closestModel.closestModel, closestModel.tooClose, closestModel.tooFar);
+        updateLocationDisplayUI(closestModel.closestDistance, closestModel.closestModel, closestModel.tooClose, closestModel.tooFar, closestModel.minDistance, closestModel.maxDistance);
 
         //Update visibility of the model based on the min max distance. 
         
@@ -410,8 +412,21 @@ function updateArrowUI() {
 }
 
 // UI update function
-function updateLocationDisplayUI(distanceToTarget, target, tooClose, tooFar) {
+function updateLocationDisplayUI(distanceToTarget, target, tooClose, tooFar, minDistance, maxDistance) {
     const locationDisplay = document.getElementById('location-display');
+
+    // Get model entity in the scene
+    const modelEntity = document.querySelector(`.${target}`);
+
+    // Adjust visibility based on distance
+    // This keeps all other models invisible because we disabled them from the start and only enable them here.
+    if (distanceToTarget >= minDistance && distanceToTarget <= maxDistance) {
+        modelEntity.setAttribute('visible', 'true');
+    } else {
+        modelEntity.setAttribute('visible', 'false');
+    }
+
+    // change text depending on distance between player and model
     if(tooClose == false && tooFar == false){
         locationDisplay.innerHTML = `Distance to closest model, ${target}: \n${distanceToTarget.toFixed(2)} meters`;
     } else if (tooClose == true && tooFar == false) {
