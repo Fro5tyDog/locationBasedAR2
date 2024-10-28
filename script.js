@@ -427,10 +427,10 @@ function calculateDistance(lat1,lon1,lat2,lon2){
 function calculateBearing(playerPos, modelPos) {
     try{
         // Convert latitude and longitude to radians
-        const lat1 = playerPos.latitude * (Math.PI / 180);
-        const lon1 = playerPos.longitude * (Math.PI / 180);
-        const lat2 = modelPos.latitude * (Math.PI / 180);
-        const lon2 = modelPos.longitude * (Math.PI / 180);
+        const lat1 = playerPos.lat * (Math.PI / 180);
+        const lon1 = playerPos.lng * (Math.PI / 180);
+        const lat2 = modelPos.lat * (Math.PI / 180);
+        const lon2 = modelPos.lng * (Math.PI / 180);
     
         // Calculate bearing using trigonometric formula
         const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
@@ -516,6 +516,7 @@ function updateArrowUI(playerPosition, modelLat, modelLng) {
          
         } catch (error) {
             console.error("Error updating arrow direction:", error);
+            reject(error);
         }
     })
 }
