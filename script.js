@@ -313,7 +313,7 @@ function adjustModelProperties(playerPosition){
                         // Get model entity in the scene
                         const modelEntity = document.querySelector(`.${modelSeparated.name}`);
 
-                        // Adjust visibility based on distance and modal visibility
+                        // Adjust visibility based on distance
                         if (distanceBetweenPlayerAndModel >= minDistance && distanceBetweenPlayerAndModel <= maxDistance) {
                             modelEntity.setAttribute('visible', 'true');
                             tooClose = false;
