@@ -264,7 +264,7 @@ function getPlayerPosition(){
     })
 }
 
-function getClosestModel(playerPosition){
+function adjustModelProperties(playerPosition){
     return new Promise((resolve, reject) => {
         try{
             // fetch json to find models positions.
@@ -286,9 +286,13 @@ function getClosestModel(playerPosition){
                 //variable to establish closest model
                 let closestDistance = 0;
                 let closestModel;
+                let tooClose = false;
+                let tooFar = false;
                 const closestModelDetails = {
                     closestDistance: closestDistance,
-                    closestModel: closestModel
+                    closestModel: closestModel,
+                    tooClose: tooClose,
+                    tooFar: tooFar
                 };
                  models.forEach(modelSeparated => {
                     const model_latitude = modelSeparated.location.lat;
@@ -297,14 +301,37 @@ function getClosestModel(playerPosition){
                     const player_longitude = playerPosition.lng;
 
                     const distanceBetweenPlayerAndModel = Number(calculateDistance(player_latitude, player_longitude, model_latitude, model_longitude));
+                    
                     console.log(distanceBetweenPlayerAndModel);
                     if (closestDistance === 0 || distanceBetweenPlayerAndModel < closestDistance) {
                         closestDistance = distanceBetweenPlayerAndModel;
                         closestModel = modelSeparated.name;
+                        // Visibility range from JSON
+                        const minDistance = modelSeparated.visibilityRange.min;
+                        const maxDistance = modelSeparated.visibilityRange.max;
+                        
+                        // Get model entity in the scene
+                        const modelEntity = document.querySelector(`.${modelSeparated.name}`);
+
+                        // Adjust visibility based on distance and modal visibility
+                        if (distanceBetweenPlayerAndModel >= minDistance && distanceBetweenPlayerAndModel <= maxDistance) {
+                            modelEntity.setAttribute('visible', 'true');
+                            tooClose = false;
+                            tooFar = false;
+                        } else {
+                            modelEntity.setAttribute('visible', 'false');
+                            if(distanceBetweenPlayerAndModel < minDistance) {
+                                tooClose = true;
+                            } else{
+                                tooFar = true;
+                            }
+                        }
                     }                 
                 })
                 closestModelDetails.closestDistance = closestDistance;
                 closestModelDetails.closestModel = closestModel;
+                closestModelDetails.tooClose = tooClose;
+                closestModelDetails.tooFar = tooFar;
                 resolve(closestModelDetails);
             }
                 
@@ -316,20 +343,28 @@ function getClosestModel(playerPosition){
 
 }
 
+let updateClosestModelLoopID; 
+
 async function updateClosestModelLoop() {
     try {
         const playerPosition = await getPlayerPosition();
-        const closestModel = await getClosestModel(playerPosition);
+        const closestModel = await adjustModelProperties(playerPosition);
         
         // Update the UI with the closest model information
         // Math.floor(closestModel.closestDistance)
-        updateLocationDisplayUI(closestModel.closestDistance, closestModel.closestModel);
+        updateLocationDisplayUI(closestModel.closestDistance, closestModel.closestModel, closestModel.tooClose, closestModel.tooFar);
+
+        //Update visibility of the model based on the min max distance. 
         
         // Call recursively on the next frame
-        requestAnimationFrame(updateClosestModelLoop);
+        updateClosestModelLoopID = requestAnimationFrame(updateClosestModelLoop);
     } catch (error) {
         console.error("Error updating closest model:", error);
     }
+}
+
+function cancelClosesModelLoop(){
+    cancelAnimationFrame(updateClosestModelLoopID);
 }
     
 
@@ -375,9 +410,17 @@ function updateArrowUI() {
 }
 
 // UI update function
-function updateLocationDisplayUI(distanceToTarget, target) {
+function updateLocationDisplayUI(distanceToTarget, target, tooClose, tooFar) {
     const locationDisplay = document.getElementById('location-display');
-    locationDisplay.innerHTML = `Distance to closest model, ${target}: ${distanceToTarget.toFixed(2)} meters`;
+    if(tooClose == false && tooFar == false){
+        locationDisplay.innerHTML = `Distance to closest model, ${target}: \n${distanceToTarget.toFixed(2)} meters`;
+    } else if (tooClose == true && tooFar == false) {
+        locationDisplay.innerHTML = `Too close to ${target}!`;
+    } else if (tooClose == false && tooFar == true) {
+        locationDisplay.innerHTML = `Too far from ${target}!: \n${distanceToTarget.toFixed(2)} meters`;
+    } else{
+        locationDisplay.innerHTML = "No models found!";
+    }
 }
 
 async function initializeMyApp(){
