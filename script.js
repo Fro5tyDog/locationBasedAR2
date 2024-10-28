@@ -142,7 +142,7 @@ function renderModels(){
                     model.setAttribute('animation-mixer', 'clip: *; loop: repeat; timeScale: 1.1; clampWhenFinished: true; crossFadeDuration: 0.3');
                     model.setAttribute('look-at', '[camera]');
                     model.setAttribute('scale', '0.15 0.15 0.15'); // Initial scale
-                    model.setAttribute('visible', 'true'); // Initially visible 
+                    model.setAttribute('visible', 'false'); // Initially invisible 
                     
                     // append to scene first before checking if it's loaded
                     scene.appendChild(model);
@@ -178,12 +178,6 @@ function createStartScreen(){
              // Handle "Tap to Start" button click
              document.getElementById('start-button').addEventListener('click', startUp);
 
-            // Check for all a-entity elements and set their visibility to false
-            // const entities = document.querySelectorAll('a-entity');
-            // entities.forEach((entity) => {
-            //     entity.setAttribute('visible', 'true');
-            // });
-
             resolve(true);
         } 
         catch(error){
@@ -199,10 +193,19 @@ async function startUp(){
     document.getElementById('top-left-circle').classList.remove('greyed-out');
 
     // Check for all a-entity elements and set their visibility to true
-    // const entities = document.querySelectorAll('a-entity');
-    // entities.forEach((entity) => {
-    //     entity.setAttribute('visible', 'true');
-    // });
+    const entities = document.querySelectorAll('a-entity');
+    entities.forEach((entity) => {
+        entity.setAttribute('visible', 'true');
+    });
+
+    // fetch player's position and the cloest target. 
+    // const playerPosition = await getPlayerPosition();
+    // const closestModel = await getClosestModel(playerPosition);
+
+    // Update the UI with the player's position and the closest model.
+    // const playerLocation = document.getElementById('player-location');
+    // playerLocation.innerHTML = `Player's location: (${playerPosition.latitude}, ${playerPosition.longitude})`;
+    updateUI();
 
     const locationDisplay = document.getElementById('location-display');
     locationDisplay.innerHTML = `start`;   
@@ -211,7 +214,7 @@ async function startUp(){
     document.querySelector('.start').classList.add('hidden');
 
     // call async functions here to run sequentially.
-    updateUI();
+    
     // await closestModelToPlayer();
     // await updateText();
     // await updateArrow();
