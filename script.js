@@ -230,7 +230,7 @@ function getClosestModel(){
 
                 const entities = document.querySelectorAll('a-entity');
                 entities.forEach((entity) => {
-                    const distanceToTarget = entity.getAttribute('distancemsg');
+                    const distanceToTarget = entity.getAttribute('distance');
                     if(closesModel === null){
                         closestModel = distanceToTarget;
                     }
