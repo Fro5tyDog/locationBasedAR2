@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // --- Variables
 let dropdownVisible = false; // Toogle to hide and unhide dropdown containers
 let selectedIcon = null; // Track the currently selected icon
+let shouldRunLoop = true; // Flag to control closestModelLoop
 
 // --- Functions
 function createDropdownContainer(){
@@ -194,12 +195,13 @@ function createStartScreen(){
 }
 
 // enabling UI and a-frame models to be seen once start button is clicked 
-async function startUp(){
+function startUp(){
     // Remove the "greyed-out" class from other UI elements
     document.querySelector('.circle-container').classList.remove('greyed-out');
     document.getElementById('top-left-circle').classList.remove('greyed-out');
 
     // Identify the closet target based on distancemsg. 
+    shouldRunLoop = true; // Set flag to true to allow the loop to run
     updateClosestModelLoop();
 
     // Update the UI with the player's position and the closest model.
@@ -361,6 +363,7 @@ function adjustModelProperties(playerPosition){
 let updateClosestModelLoopID; 
 
 async function updateClosestModelLoop() {
+    if(!shouldRunLoop) return; // exit if loop is cancelled
     try {
         const playerPosition = await getPlayerPosition();
         const closestModel = await adjustModelProperties(playerPosition);
@@ -384,7 +387,9 @@ async function updateClosestModelLoop() {
 function cancelClosestModelLoop(){
     return new Promise((resolve, reject) => {
         try{
-            resolve(cancelAnimationFrame(updateClosestModelLoopID));
+            shouldRunLoop = false; // Set the flag to false to stop scheduling new frames
+            cancelAnimationFrame(updateClosestModelLoopID); // Cancel the current frame if it’s pending
+            resolve(true);
         }
         catch(error){
             reject(error);
