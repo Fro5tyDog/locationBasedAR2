@@ -96,9 +96,11 @@ function thumbnailClick(event){
 }
 
 // What happens when you select a new model
-function selectNewModel(name){
+async function selectNewModel(name){
 
-    //1. cancel the closest Model loop 
+    //1. cancel the closest Model loop
+    const cancelLoop = await cancelClosestModelLoop(); 
+    console.log(cancelLoop);
     //2. call for the player's position
     //3. call for adjustModelProperties
     //4. Call for UI updates 
@@ -196,14 +198,6 @@ async function startUp(){
     // Remove the "greyed-out" class from other UI elements
     document.querySelector('.circle-container').classList.remove('greyed-out');
     document.getElementById('top-left-circle').classList.remove('greyed-out');
-
-    // Check for all a-entity elements and set their visibility to true
-    // Update the innnerHTML to display cloest model to the player.
-    // handle this in updateClosestModel
-    // const entities = document.querySelectorAll('a-entity');
-    // entities.forEach((entity) => {
-    //     entity.setAttribute('visible', 'true');
-    // });
 
     // Identify the closet target based on distancemsg. 
     updateClosestModelLoop();
@@ -378,7 +372,7 @@ async function updateClosestModelLoop() {
         const updateUI_Models = await updateLocationDisplayUI(closestModel.closestDistance, closestModel.closestModel, closestModel.tooClose, closestModel.tooFar, closestModel.minDistance, closestModel.maxDistance);
 
         //Update arrow based on bearing 
-        updateArrowUI(playerPosition, closestModel.modelLat, closestModel.modelLng);
+        // updateArrowUI(playerPosition, closestModel.modelLat, closestModel.modelLng);
 
         // Call recursively on the next frame
         updateClosestModelLoopID = requestAnimationFrame(updateClosestModelLoop);
@@ -390,8 +384,7 @@ async function updateClosestModelLoop() {
 function cancelClosestModelLoop(){
     return new Promise((resolve, reject) => {
         try{
-            cancelAnimationFrame(updateClosestModelLoopID);
-            resolve(true);
+            resolve(cancelAnimationFrame(updateClosestModelLoopID));
         }
         catch(error){
             reject(error);
@@ -423,28 +416,53 @@ function calculateDistance(lat1,lon1,lat2,lon2){
     }  
 }
 
-// functions to calcuate angle the arrow should rotate.
-function calculateBearing(playerPos, modelPos) {
-    const lat1 = toRadians(playerPos.lat);
-    const lat2 = toRadians(modelPos.lat);
-    const deltaLon = toRadians(modelPos.lng - playerPos.lng);
-
-    const y = Math.sin(deltaLon) * Math.cos(lat2);
-    const x = Math.cos(lat1) * Math.sin(lat2) - 
-              Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
-    const bearing = Math.atan2(y, x);
-    
-    // Convert from radians to degrees and normalize between 0-360
-    return (toDegrees(bearing) + 360) % 360;
-}
-
+// Converts from degrees to radians.
 function toRadians(degrees) {
-    return degrees * (Math.PI / 180);
+    return degrees * Math.PI / 180;
+};
+
+// Converts from radians to degrees.
+function toDegrees(radians) {
+    return radians * 180 / Math.PI;
 }
 
-function toDegrees(radians) {
-    return radians * (180 / Math.PI);
+
+function calculateBearing(playerPos, modelPos){
+    startLat = toRadians(playerPos.lat);
+    startLng = toRadians(playerPos.lng);
+    destLat = toRadians(modelPos.lat);
+    destLng = toRadians(modelPos.lng);
+
+    y = Math.sin(destLng - startLng) * Math.cos(destLat);
+    x = Math.cos(startLat) * Math.sin(destLat) -
+            Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng);
+    brng = Math.atan2(y, x);
+    brng = toDegrees(brng);
+    return (brng + 360) % 360;
 }
+
+// functions to calcuate angle the arrow should rotate.
+// function calculateBearing(playerPos, modelPos) {
+// //     const lat1 = toRadians(playerPos.lat);
+// //     const lat2 = toRadians(modelPos.lat);
+// //     const deltaLon = toRadians(modelPos.lng - playerPos.lng);
+
+// //     const y = Math.sin(deltaLon) * Math.cos(lat2);
+// //     const x = Math.cos(lat1) * Math.sin(lat2) - 
+// //               Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
+// //     const bearing = Math.atan2(y, x);
+    
+// //     // Convert from radians to degrees and normalize between 0-360
+// //     return (toDegrees(bearing) + 360) % 360;
+// // }
+
+// // function toRadians(degrees) {
+// //     return degrees * (Math.PI / 180);
+// // }
+
+// // function toDegrees(radians) {
+// //     return radians * (180 / Math.PI);
+// // }
 
 
 
