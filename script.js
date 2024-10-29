@@ -1,7 +1,3 @@
-let animationFrameId; // Store the animation frame ID globally
-
-
-
 // wait for dom to finish loading before loading models and updating UI
 document.addEventListener('DOMContentLoaded', function () {
         initializeMyApp();
@@ -103,8 +99,9 @@ async function selectNewModel(name){
     const cancelLoop = await cancelClosestModelLoop(); 
     console.log(cancelLoop);
     //2. call for the player's position
-    //3. call for adjustModelProperties
-    //4. Call for UI updates 
+    //3. Set all models to be invisible
+    //4. call JSON and find out the lat and lng of the selected model. 
+    //5. Call for UI updates 
     const locationDisplay = document.getElementById('location-display');
     locationDisplay.innerHTML = `${name}`;   
 }
@@ -572,10 +569,10 @@ function updateLocationDisplayUI(distanceToTarget, target, tooClose, tooFar, min
 async function initializeMyApp(){
 
     // 1.
-    const dropdownRender = await createDropdownContainer();
-
-    // 2.
     const modelRender = await renderModels();
+    
+    // 2.
+    const dropdownRender = await createDropdownContainer();
 
     // 3.
     const startUpScreen = await createStartScreen();
